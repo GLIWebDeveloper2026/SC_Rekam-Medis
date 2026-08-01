@@ -32,6 +32,7 @@ class ClinicSeeder extends Seeder
             'pharmacist' => ['dashboard.view', 'patients.safety-view', 'pharmacy.manage', 'inventory.manage'],
             'registration' => ['dashboard.view', 'patients.view', 'patients.manage', 'schedules.view', 'queue.view', 'queue.manage', 'record-copies.manage'],
             'system_admin' => ['dashboard.view', 'users.manage', 'audit.view', 'system.manage'],
+            'patient' => [],
         ];
 
         foreach ($roles as $code => $permissionCodes) {

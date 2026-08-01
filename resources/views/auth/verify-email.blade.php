@@ -2,7 +2,7 @@
     title="Verifikasi email - Sehat Bersama"
     eyebrow="Keamanan akun"
     heading="Verifikasi alamat email"
-    description="Verifikasi tidak menghalangi akses dashboard, tetapi membantu pemulihan akun dan memastikan alamat email dapat digunakan."
+    description="Verifikasi email diperlukan sebelum pasien dapat melihat status persetujuan dan menggunakan portal."
 >
     @if (session('status') === 'verification-link-sent')
         <p class="mt-6 rounded-xl bg-success/10 px-4 py-3 text-sm font-semibold text-success" role="status">Tautan verifikasi baru telah dikirim.</p>

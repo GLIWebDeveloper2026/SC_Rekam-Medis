@@ -6,6 +6,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProviderSchedule extends Model
 {
@@ -13,13 +14,25 @@ class ProviderSchedule extends Model
 
     protected $fillable = [
         'provider_user_id', 'service_type', 'day_of_week', 'start_time', 'end_time',
-        'effective_from', 'effective_until', 'status',
+        'slot_duration_minutes', 'slot_capacity', 'effective_from', 'effective_until', 'status',
     ];
 
     /** @return BelongsTo<User, $this> */
     public function provider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'provider_user_id');
+    }
+
+    /** @return HasMany<ScheduleException, $this> */
+    public function exceptions(): HasMany
+    {
+        return $this->hasMany(ScheduleException::class);
+    }
+
+    /** @return HasMany<Appointment, $this> */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'provider_schedule_id');
     }
 
     public function isAvailableOn(CarbonInterface $date): bool
@@ -34,6 +47,8 @@ class ProviderSchedule extends Model
     {
         return [
             'day_of_week' => 'integer',
+            'slot_duration_minutes' => 'integer',
+            'slot_capacity' => 'integer',
             'effective_from' => 'date',
             'effective_until' => 'date',
         ];

@@ -1,0 +1,1 @@
+<section {{ $attributes->merge(['class' => 'rounded-[var(--radius-panel)] border border-slate-200/80 bg-white/95 p-5 shadow-[var(--shadow-panel)] dark:border-slate-700 dark:bg-slate-900/95']) }}>{{ $slot }}</section>

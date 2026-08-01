@@ -22,6 +22,18 @@ class Registration extends Model
         return $this->belongsTo(Patient::class);
     }
 
+    /** @return BelongsTo<ProviderSchedule, $this> */
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(ProviderSchedule::class, 'provider_schedule_id');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     /** @return HasOne<QueueTicket, $this> */
     public function queueTicket(): HasOne
     {
@@ -32,5 +44,16 @@ class Registration extends Model
     public function visit(): HasOne
     {
         return $this->hasOne(Visit::class);
+    }
+
+    /** @return HasOne<Appointment, $this> */
+    public function appointment(): HasOne
+    {
+        return $this->hasOne(Appointment::class);
+    }
+
+    protected function casts(): array
+    {
+        return ['registration_date' => 'date'];
     }
 }

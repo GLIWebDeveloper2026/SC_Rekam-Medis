@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'openai' => [
+        'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+        'key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-5.6-terra'),
+        'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        'connect_timeout' => (int) env('OPENAI_CONNECT_TIMEOUT', 3),
+        'timeout' => (int) env('OPENAI_TIMEOUT', 20),
+    ],
+
 ];

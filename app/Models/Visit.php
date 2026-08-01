@@ -21,9 +21,24 @@ class Visit extends Model
         return $this->belongsTo(Patient::class);
     }
 
+    /** @return BelongsTo<Registration, $this> */
+    public function registration(): BelongsTo
+    {
+        return $this->belongsTo(Registration::class);
+    }
+
     /** @return HasMany<Encounter, $this> */
     public function encounters(): HasMany
     {
         return $this->hasMany(Encounter::class);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'visit_date' => 'date',
+            'arrived_at' => 'datetime',
+            'completed_at' => 'datetime',
+        ];
     }
 }

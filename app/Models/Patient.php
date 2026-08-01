@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use Database\Factories\PatientFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Patient extends Model
 {
-    use HasUuids;
+    /** @use HasFactory<PatientFactory> */
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'medical_record_number', 'canonical_patient_id', 'full_name', 'normalized_name',
@@ -38,6 +42,24 @@ class Patient extends Model
     public function allergyEntries(): HasMany
     {
         return $this->hasMany(AllergyEntry::class);
+    }
+
+    /** @return HasOne<PatientPortalAccount, $this> */
+    public function portalAccount(): HasOne
+    {
+        return $this->hasOne(PatientPortalAccount::class);
+    }
+
+    /** @return HasMany<Registration, $this> */
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(Registration::class);
+    }
+
+    /** @return HasMany<Visit, $this> */
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class);
     }
 
     public function hasActiveAllergy(): bool
