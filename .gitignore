@@ -6,9 +6,11 @@
 .phpactor.json
 .phpunit.result.cache
 /.codex
+/.agent
 /.agents
 /.pi
 /AGENTS.md
+/.playwright
 /.playwright-mcp
 /.cursor/
 /.idea
