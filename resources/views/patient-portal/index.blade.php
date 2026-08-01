@@ -76,23 +76,32 @@
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-bold" for="slot_start">Jam kunjungan (Kelipatan 30 Menit)</label>
-                        <template x-if="availableSlots.length > 0">
-                            <select class="form-input" id="slot_start" name="slot_start" x-model="slotStart" required>
-                                <option value="">-- Pilih Slot Jam --</option>
+                        <select class="form-input" id="slot_start" name="slot_start" x-model="slotStart" required>
+                            <option value="">-- Pilih Jam (contoh: 10:30, 12:30) --</option>
+                            <template x-if="availableSlots.length > 0">
                                 <template x-for="slot in availableSlots" :key="slot.start">
                                     <option :value="slot.start" x-text="slot.start + ' - ' + slot.end + ' WIB'"></option>
                                 </template>
-                            </select>
-                        </template>
-                        <template x-if="availableSlots.length === 0">
-                            <input class="form-input" id="slot_start" name="slot_start" type="time" step="1800" x-model="slotStart" placeholder="08:00" required>
-                        </template>
+                            </template>
+                            <template x-if="availableSlots.length === 0">
+                                <template x-for="timeOption in ['07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30']" :key="timeOption">
+                                    <option :value="timeOption" x-text="timeOption + ' WIB'"></option>
+                                </template>
+                            </template>
+                        </select>
                         @error('slot_start')<p class="mt-2 text-sm font-semibold text-danger">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
-                <div x-show="statusMessage" x-transition class="rounded-lg p-3 text-xs font-semibold" :class="isAvailableDate && availableCount > 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'">
-                    <span x-text="statusMessage"></span>
+                <div x-show="scheduleId && date" x-transition class="rounded-xl border p-4 shadow-sm" :class="isAvailableDate && availableCount > 0 ? 'bg-success/10 text-success border-success/30' : 'bg-danger/10 text-danger border-danger/30'">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider">Sisa Slot Dokter</span>
+                            <p class="mt-1 text-lg font-bold" x-text="availableCount !== null ? availableCount + ' Slot Tersisa' : 'Memuat...'"></p>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-bold" :class="isAvailableDate && availableCount > 0 ? 'bg-success text-white' : 'bg-danger text-white'" x-text="isAvailableDate && availableCount > 0 ? 'Tersedia' : 'Penuh / Tidak Praktik'"></span>
+                    </div>
+                    <p class="mt-2 text-xs leading-relaxed" x-text="statusMessage"></p>
                 </div>
 
                 <div>
@@ -123,9 +132,12 @@
 
     <section class="mt-8" id="appointments">
         <div class="flex items-end justify-between gap-4">
-            <div><h2 class="text-2xl font-bold">Janji temu aktif</h2><p class="mt-2 text-slate-500">Perubahan hanya tersedia untuk jadwal mendatang.</p></div>
+            <div>
+                <p class="text-sm font-bold uppercase tracking-[0.2em] text-clinic-600">Janji temu aktif</p>
+                <h2 class="mt-2 text-2xl font-bold">Jadwal kedatangan Anda</h2>
+            </div>
         </div>
-        <div class="mt-5 grid gap-5 lg:grid-cols-2">
+        <div class="mt-6 grid gap-6 md:grid-cols-2">
             @forelse ($appointments as $appointment)
                 <article class="panel p-6">
                     <div class="flex items-start justify-between gap-4">
@@ -160,7 +172,15 @@
                                         <option value="{{ $schedule->id }}" @selected($schedule->id === $appointment->provider_schedule_id)>{{ $schedule->provider->name }} - {{ str($schedule->service_type)->headline() }}</option>
                                     @endforeach
                                 </select>
-                                <div class="grid gap-3 sm:grid-cols-2"><input class="form-input" name="appointment_date" type="date" min="{{ now(config('clinic.timezone'))->toDateString() }}" value="{{ old('appointment_date', $appointment->appointment_date->toDateString()) }}" required><input class="form-input" name="slot_start" type="time" step="1800" value="{{ old('slot_start', $appointment->slot_start) }}" required></div>
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    <input class="form-input" name="appointment_date" type="date" min="{{ now(config('clinic.timezone'))->toDateString() }}" value="{{ old('appointment_date', $appointment->appointment_date->toDateString()) }}" required>
+                                    <select class="form-input" name="slot_start" required>
+                                        <option value="">-- Pilih Jam (Kelipatan 30) --</option>
+                                        @foreach (['07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30'] as $timeOption)
+                                            <option value="{{ $timeOption }}" @selected(old('slot_start', substr($appointment->slot_start, 0, 5)) === $timeOption)>{{ $timeOption }} WIB</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                                 <button class="btn-primary" type="submit">Jadwalkan ulang</button>
                             </form>
                             <form class="mt-5 grid gap-3 border-t border-slate-100 pt-5" method="POST" action="{{ route('patient-portal.appointments.destroy', $appointment) }}">

@@ -95,7 +95,7 @@ class AppointmentToolHandler
         $validated = Validator::make($arguments, [
             'provider_schedule_id' => ['required', 'uuid', 'exists:provider_schedules,id'],
             'appointment_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
-            'slot_start' => ['required', 'date_format:H:i,H:i:s'],
+            'slot_start' => ['required', 'date_format:H:i,H:i:s', 'regex:/^(0[0-9]|1[0-9]|2[0-3]):(00|30)(:00)?$/'],
             'payer_type' => ['required', 'in:general,insurance,other'],
         ])->validate();
         $appointment = $this->bookAppointment->execute(
@@ -146,7 +146,7 @@ class AppointmentToolHandler
         $validated = Validator::make($arguments, [
             'provider_schedule_id' => ['required', 'uuid', 'exists:provider_schedules,id'],
             'appointment_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
-            'slot_start' => ['required', 'date_format:H:i,H:i:s'],
+            'slot_start' => ['required', 'date_format:H:i,H:i:s', 'regex:/^(0[0-9]|1[0-9]|2[0-3]):(00|30)(:00)?$/'],
         ])->validate();
         $updated = $this->rescheduleAppointment->execute(
             $appointment,
