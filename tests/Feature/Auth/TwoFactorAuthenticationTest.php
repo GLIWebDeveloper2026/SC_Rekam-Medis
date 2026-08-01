@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
-use PragmaRX\Google2FA\Google2FA;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class TwoFactorAuthenticationTest extends TestCase
@@ -26,82 +26,28 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->assertArrayNotHasKey('two_factor_recovery_codes', $serializedUser);
     }
 
-    public function test_user_can_enable_and_confirm_two_factor_authentication(): void
+    public function test_two_factor_authentication_routes_are_disabled(): void
     {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => now()->timestamp])
-            ->post('/user/two-factor-authentication')
-            ->assertSessionHas('status', 'two-factor-authentication-enabled');
-
-        $user->refresh();
-
-        $this->assertNotNull($user->two_factor_secret);
-        $this->assertNotNull($user->two_factor_recovery_codes);
-        $this->assertNull($user->two_factor_confirmed_at);
-
-        $secret = Crypt::decrypt($user->two_factor_secret);
-        $code = app(Google2FA::class)->getCurrentOtp($secret);
-
-        $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => now()->timestamp])
-            ->post('/user/confirmed-two-factor-authentication', ['code' => $code])
-            ->assertSessionHas('status', 'two-factor-authentication-confirmed');
-
-        $this->assertNotNull($user->fresh()->two_factor_confirmed_at);
+        $this->assertNull(Route::getRoutes()->getByName('two-factor.login'));
+        $this->assertNull(Route::getRoutes()->getByName('two-factor.login.store'));
+        $this->assertNull(Route::getRoutes()->getByName('two-factor.enable'));
     }
 
-    public function test_confirmed_two_factor_user_is_challenged_during_login(): void
+    public function test_user_with_existing_two_factor_configuration_can_login_without_challenge(): void
     {
         $user = User::factory()->create([
             'email' => 'dua.faktor@sehatbersama.test',
             'password' => Hash::make('Klinik!2026'),
+            'two_factor_secret' => Crypt::encryptString('existing-secret'),
+            'two_factor_recovery_codes' => Crypt::encryptString(json_encode(['recovery-code'], JSON_THROW_ON_ERROR)),
+            'two_factor_confirmed_at' => now(),
         ]);
-
-        $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => now()->timestamp])
-            ->post('/user/two-factor-authentication');
-
-        $user->refresh()->forceFill(['two_factor_confirmed_at' => now()])->save();
-        $recoveryCodes = json_decode(Crypt::decrypt($user->two_factor_recovery_codes), true, flags: JSON_THROW_ON_ERROR);
-
-        $this->actingAsGuest();
 
         $this->post('/login', [
             'email' => $user->email,
             'password' => 'Klinik!2026',
-        ])->assertRedirect('/two-factor-challenge');
-
-        $this->assertGuest();
-        $this->get('/two-factor-challenge')
-            ->assertOk()
-            ->assertSee('Konfirmasi autentikasi dua faktor');
-
-        $this->post('/two-factor-challenge', [
-            'recovery_code' => $recoveryCodes[0],
         ])->assertRedirect('/dashboard');
 
         $this->assertAuthenticatedAs($user);
-    }
-
-    public function test_user_can_disable_two_factor_authentication(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => now()->timestamp])
-            ->post('/user/two-factor-authentication');
-
-        $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => now()->timestamp])
-            ->delete('/user/two-factor-authentication')
-            ->assertSessionHas('status', 'two-factor-authentication-disabled');
-
-        $user->refresh();
-
-        $this->assertNull($user->two_factor_secret);
-        $this->assertNull($user->two_factor_recovery_codes);
-        $this->assertNull($user->two_factor_confirmed_at);
     }
 }

@@ -27,6 +27,31 @@ import {
     X,
 } from 'lucide';
 
+const createIdempotencyKey = () => {
+    const cryptoApi = window.crypto || window.msCrypto;
+
+    if (cryptoApi && typeof cryptoApi.randomUUID === 'function') {
+        return cryptoApi.randomUUID();
+    }
+
+    const bytes = new Uint8Array(16);
+
+    if (cryptoApi && typeof cryptoApi.getRandomValues === 'function') {
+        cryptoApi.getRandomValues(bytes);
+    } else {
+        for (let index = 0; index < bytes.length; index += 1) {
+            bytes[index] = Math.floor(Math.random() * 256);
+        }
+    }
+
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+    const hexadecimal = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+
+    return `${hexadecimal.slice(0, 8)}-${hexadecimal.slice(8, 12)}-${hexadecimal.slice(12, 16)}-${hexadecimal.slice(16, 20)}-${hexadecimal.slice(20)}`;
+};
+
 Alpine.data('navigation', () => ({
     open: false,
     toggle() {
@@ -93,7 +118,7 @@ Alpine.data('clinicChat', () => ({
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 },
                 body: JSON.stringify({
-                    idempotency_key: crypto.randomUUID(),
+                    idempotency_key: createIdempotencyKey(),
                     messages: this.messages.slice(-12),
                     current_page: window.location.pathname,
                 }),

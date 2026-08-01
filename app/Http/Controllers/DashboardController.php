@@ -6,13 +6,22 @@ use App\Models\Encounter;
 use App\Models\Patient;
 use App\Models\Prescription;
 use App\Models\QueueTicket;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function __invoke(Request $request): View|RedirectResponse
     {
+        if ($request->user()->hasRole('patient')) {
+            return redirect()->route(
+                $request->user()->patientPortalAccount?->isApproved()
+                    ? 'patient-portal.index'
+                    : 'patient-portal.status',
+            );
+        }
+
         $metrics = [
             'queue_waiting' => QueueTicket::query()->whereDate('service_date', now()->toDateString())->whereIn('status', ['booked', 'waiting', 'triaged'])->count(),
             'active_encounters' => Encounter::query()->whereIn('status', ['planned', 'active'])->count(),

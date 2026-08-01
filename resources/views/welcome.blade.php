@@ -54,7 +54,7 @@
         <section class="mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
             <div class="grid gap-6 rounded-2xl bg-clinic-900 p-7 text-white md:grid-cols-2 md:p-10">
                 <div><h2 class="font-heading text-2xl font-bold">Jam operasional</h2><p class="mt-2 text-clinic-100">Senin-Sabtu, 07:00-21:00 WIB.</p></div>
-                <div><h2 class="font-heading text-2xl font-bold">Akses portal pasien</h2><p class="mt-2 text-clinic-100">Daftar dengan email, lalu tunggu persetujuan staf sebelum menggunakan portal dan chatbot.</p></div>
+                <div><h2 class="font-heading text-2xl font-bold">Akses portal pasien</h2><p class="mt-2 text-clinic-100">Daftar dengan email, lalu gunakan portal dan chatbot setelah pendaftaran selesai.</p></div>
             </div>
         </section>
     </main>

@@ -51,7 +51,7 @@
 
             <footer class="border-t border-slate-200 bg-white py-12 dark:border-slate-800 dark:bg-slate-950">
                 <div class="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 md:grid-cols-[1.2fr_.8fr_.8fr] lg:px-8">
-                    <div><strong class="font-heading text-lg">Klinik Pratama Sehat Bersama</strong><p class="mt-3 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">Informasi jadwal tersedia untuk publik. Portal pasien memerlukan akun dan persetujuan staf.</p></div>
+                    <div><strong class="font-heading text-lg">Klinik Pratama Sehat Bersama</strong><p class="mt-3 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">Informasi jadwal tersedia untuk publik. Portal pasien dapat digunakan langsung setelah membuat akun.</p></div>
                     <div><h2 class="font-bold">Kontak</h2><p class="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">(022) 555-0177<br>pendaftaran@sehatbersama.test</p></div>
                     <div><h2 class="font-bold">Lokasi</h2><p class="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">Jl. Sehat Bersama No. 17<br>Kota Bandung</p></div>
                 </div>

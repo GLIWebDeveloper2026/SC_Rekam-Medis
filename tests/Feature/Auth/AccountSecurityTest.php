@@ -3,8 +3,10 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AccountSecurityTest extends TestCase
@@ -26,7 +28,8 @@ class AccountSecurityTest extends TestCase
             ->assertOk()
             ->assertSee('Keamanan akun')
             ->assertSee('Profil dan identitas')
-            ->assertSee('Autentikasi dua faktor');
+            ->assertDontSee('Autentikasi dua faktor')
+            ->assertDontSee('Verifikasi email');
     }
 
     public function test_account_security_screen_requires_password_confirmation(): void
@@ -40,6 +43,7 @@ class AccountSecurityTest extends TestCase
 
     public function test_user_can_update_profile_information(): void
     {
+        Notification::fake();
         $user = User::factory()->create([
             'name' => 'Nama Lama',
             'username' => 'nama.lama',
@@ -49,13 +53,15 @@ class AccountSecurityTest extends TestCase
             ->put('/user/profile-information', [
                 'name' => 'Nama Baru',
                 'username' => 'nama.baru',
-                'email' => $user->email,
+                'email' => 'nama.baru@sehatbersama.test',
             ])->assertSessionHas('status', 'profile-information-updated');
 
         $updatedUser = $user->fresh();
 
         $this->assertSame('Nama Baru', $updatedUser->name);
         $this->assertSame('nama.baru', $updatedUser->username);
+        $this->assertSame('nama.baru@sehatbersama.test', $updatedUser->email);
+        Notification::assertNotSentTo($updatedUser, VerifyEmail::class);
     }
 
     public function test_user_can_update_password(): void

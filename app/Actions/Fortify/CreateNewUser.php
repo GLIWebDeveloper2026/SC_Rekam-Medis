@@ -2,6 +2,8 @@
 
 namespace App\Actions\Fortify;
 
+use App\Actions\Patients\RegisterPatient;
+use App\Models\PatientPortalAccount;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,8 @@ use Laravel\Fortify\Contracts\CreatesNewUsers;
 class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules;
+
+    public function __construct(private readonly RegisterPatient $registerPatient) {}
 
     /**
      * Validate and create a newly registered user.
@@ -42,8 +46,8 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::unique(User::class),
             ],
             'birth_date' => ['required', 'date', 'before:today'],
+            'sex' => ['required', 'in:male,female,unknown'],
             'phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+(). -]+$/'],
-            'medical_record_number' => ['nullable', 'string', 'max:255'],
             'password' => $this->passwordRules(),
         ])->validate();
 
@@ -58,24 +62,27 @@ class CreateNewUser implements CreatesNewUsers
 
             $patientRole = Role::query()->firstOrCreate(
                 ['code' => 'patient'],
-                ['name' => 'Patient', 'description' => 'Akun portal pasien yang memerlukan persetujuan staf.'],
+                ['name' => 'Patient', 'description' => 'Akun pasien dengan akses langsung ke portal.'],
             );
             $user->roles()->attach($patientRole, [
                 'id' => (string) Str::uuid(),
                 'assigned_at' => now(),
             ]);
 
-            $medicalRecordNumber = filled($validated['medical_record_number'] ?? null)
-                ? Str::upper(Str::squish($validated['medical_record_number']))
-                : null;
+            $patient = $this->registerPatient->execute([
+                'full_name' => $validated['name'],
+                'birth_date' => $validated['birth_date'],
+                'sex' => $validated['sex'],
+                'phone' => $validated['phone'],
+            ], $user->id);
 
             $user->patientPortalAccount()->create([
+                'patient_id' => $patient->id,
+                'status' => PatientPortalAccount::StatusApproved,
                 'claimed_birth_date' => $validated['birth_date'],
                 'claimed_phone' => Str::of($validated['phone'])->replaceMatches('/\D+/', '')->toString(),
-                'claimed_medical_record_number' => $medicalRecordNumber,
-                'claimed_identifier_hash' => $medicalRecordNumber === null
-                    ? null
-                    : hash('sha256', $medicalRecordNumber),
+                'claimed_medical_record_number' => $patient->medical_record_number,
+                'claimed_identifier_hash' => hash('sha256', $patient->medical_record_number),
             ]);
 
             return $user;

@@ -2,7 +2,7 @@
     title="Masuk - Sehat Bersama"
     eyebrow="Akses akun"
     heading="Masuk ke sistem klinik"
-    description="Pasien dan staf menggunakan akun masing-masing untuk membuka layanan yang telah disetujui."
+    description="Pasien dan staf menggunakan akun masing-masing untuk membuka layanan sesuai hak aksesnya."
 >
     <form class="mt-8 grid gap-5" method="POST" action="{{ route('login.store') }}">
         @csrf

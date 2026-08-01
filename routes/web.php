@@ -5,15 +5,20 @@ use App\Http\Controllers\AllergyEntryController;
 use App\Http\Controllers\ClinicalDraftController;
 use App\Http\Controllers\ClinicalEntryController;
 use App\Http\Controllers\ClinicalWorkspaceController;
+use App\Http\Controllers\ClinicChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DispensingController;
 use App\Http\Controllers\EncounterController;
 use App\Http\Controllers\MedicalRecordCopyController;
+use App\Http\Controllers\PatientAppointmentController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PatientIdentifierController;
 use App\Http\Controllers\PatientMergeController;
+use App\Http\Controllers\PatientPortalAccountReviewController;
+use App\Http\Controllers\PatientPortalController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\PublicHomeController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ReportController;
@@ -21,9 +26,7 @@ use App\Http\Controllers\SubstitutionController;
 use App\Http\Controllers\TriageController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', PublicHomeController::class)->name('home');
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -62,4 +65,40 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/medical-record-copy-requests/{medicalRecordCopyRequest}/approve', [MedicalRecordCopyController::class, 'approve'])->middleware('permission:record-copies.approve')->name('record-copies.approve');
     Route::post('/medical-record-copy-requests/{medicalRecordCopyRequest}/generate', [MedicalRecordCopyController::class, 'generate'])->middleware('permission:record-copies.manage')->name('record-copies.generate');
     Route::get('/reports', [ReportController::class, 'index'])->middleware('permission:reports.view')->name('reports.index');
+
+    Route::get('/patient-portal-reviews', [PatientPortalAccountReviewController::class, 'index'])
+        ->middleware('permission:patients.manage')
+        ->name('patient-portal-reviews.index');
+    Route::post('/patient-portal-reviews/{patientPortalAccount}/approve', [PatientPortalAccountReviewController::class, 'approve'])
+        ->middleware(['permission:patients.manage', 'throttle:20,1'])
+        ->name('patient-portal-reviews.approve');
+    Route::post('/patient-portal-reviews/{patientPortalAccount}/reject', [PatientPortalAccountReviewController::class, 'reject'])
+        ->middleware(['permission:patients.manage', 'throttle:20,1'])
+        ->name('patient-portal-reviews.reject');
+});
+
+Route::middleware('auth')->group(function (): void {
+    Route::get('/patient-portal/account-status', [PatientPortalController::class, 'status'])
+        ->name('patient-portal.status');
+
+    Route::middleware('patient.approved')->group(function (): void {
+        Route::get('/patient-portal', [PatientPortalController::class, 'index'])
+            ->name('patient-portal.index');
+        Route::post('/patient-portal/appointments', [PatientAppointmentController::class, 'store'])
+            ->middleware('throttle:12,1')
+            ->name('patient-portal.appointments.store');
+        Route::put('/patient-portal/appointments/{appointment}', [PatientAppointmentController::class, 'update'])
+            ->middleware('throttle:12,1')
+            ->name('patient-portal.appointments.update');
+        Route::delete('/patient-portal/appointments/{appointment}', [PatientAppointmentController::class, 'destroy'])
+            ->middleware('throttle:12,1')
+            ->name('patient-portal.appointments.destroy');
+        Route::post('/patient-portal/appointments/{appointment}/check-in', [PatientAppointmentController::class, 'checkIn'])
+            ->middleware('throttle:12,1')
+            ->name('patient-portal.appointments.check-in');
+    });
+
+    Route::post('/assistant/messages', ClinicChatController::class)
+        ->middleware('throttle:clinic-chat')
+        ->name('assistant.messages');
 });

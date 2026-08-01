@@ -3,16 +3,14 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
-use Illuminate\Auth\MustVerifyEmail;
-use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable([
     'name',
@@ -31,10 +29,10 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
     'two_factor_secret',
     'two_factor_recovery_codes',
 ])]
-class User extends Authenticatable implements MustVerifyEmailContract
+class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasUuids, MustVerifyEmail, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, HasUuids, Notifiable;
 
     public function isActive(): bool
     {
@@ -49,6 +47,12 @@ class User extends Authenticatable implements MustVerifyEmailContract
     {
         return $this->belongsToMany(Role::class, 'user_roles')
             ->withPivot(['id', 'valid_from', 'valid_until', 'assigned_by', 'assigned_at']);
+    }
+
+    /** @return HasOne<PatientPortalAccount, $this> */
+    public function patientPortalAccount(): HasOne
+    {
+        return $this->hasOne(PatientPortalAccount::class);
     }
 
     public function hasPermission(string $permission): bool
