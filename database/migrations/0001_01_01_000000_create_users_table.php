@@ -12,13 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name');
+            $table->string('username')->unique();
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->dateTime('email_verified_at', precision: 6)->nullable();
             $table->string('password');
+            $table->string('status', 24)->default('active')->index();
+            $table->unsignedTinyInteger('failed_login_attempts')->default(0);
+            $table->dateTime('locked_until', precision: 6)->nullable();
+            $table->dateTime('last_login_at', precision: 6)->nullable();
+            $table->dateTime('disabled_at', precision: 6)->nullable();
             $table->rememberToken();
-            $table->timestamps();
+            $table->timestamps(6);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -29,7 +35,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->uuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');

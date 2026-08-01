@@ -2,8 +2,123 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+@source '../js/**/*.js';
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+@theme static {
+    --font-heading: 'Poppins', ui-sans-serif, sans-serif;
+    --font-sans: 'Nunito Sans', ui-sans-serif, sans-serif;
+    --color-clinic-50: #f1fbf8;
+    --color-clinic-100: #e4f5f1;
+    --color-clinic-200: #c8ebe3;
+    --color-clinic-300: #95d9ca;
+    --color-clinic-400: #5fc1ae;
+    --color-clinic-500: #2fa791;
+    --color-clinic-600: #238777;
+    --color-clinic-700: #206c61;
+    --color-clinic-800: #1e574f;
+    --color-clinic-900: #1d4943;
+    --color-info: #4a90e2;
+    --color-danger: #e4574c;
+    --color-success: #3fb27f;
+    --color-ink: #2e2e2e;
+    --color-muted: #6b7280;
+    --color-surface: #f7f9fa;
+    --radius-card: 1rem;
+    --shadow-card: 0 18px 50px -32px rgb(31 85 75 / 0.38);
+}
+
+@layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+
+    html {
+        color: var(--color-ink);
+        background: var(--color-surface);
+    }
+
+    body {
+        min-height: 100vh;
+        font-family: var(--font-sans);
+        background-image:
+            radial-gradient(circle at 8% 0%, rgb(228 245 241 / 0.75), transparent 28rem),
+            radial-gradient(circle at 96% 12%, rgb(74 144 226 / 0.08), transparent 26rem);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--font-heading);
+        letter-spacing: -0.025em;
+    }
+
+    button,
+    a,
+    input,
+    select,
+    textarea {
+        outline: none;
+    }
+
+    :focus-visible {
+        outline: 3px solid rgb(47 167 145 / 0.35);
+        outline-offset: 3px;
+    }
+}
+
+@layer components {
+    .panel {
+        border: 1px solid rgb(226 232 240 / 0.85);
+        border-radius: var(--radius-card);
+        background: rgb(255 255 255 / 0.94);
+        box-shadow: var(--shadow-card);
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.625rem;
+        background: var(--color-clinic-500);
+        padding: 0.7rem 1.15rem;
+        font-weight: 700;
+        color: white;
+        transition: background-color 180ms ease, transform 180ms ease;
+    }
+
+    .btn-primary:hover {
+        background: var(--color-clinic-600);
+        transform: translateY(-1px);
+    }
+
+    .form-input {
+        min-height: 2.875rem;
+        width: 100%;
+        border: 1px solid #d7dee3;
+        border-radius: 0.625rem;
+        background: white;
+        padding: 0.7rem 0.85rem;
+        color: var(--color-ink);
+        transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .form-input:focus {
+        border-color: var(--color-clinic-500);
+        box-shadow: 0 0 0 4px rgb(47 167 145 / 0.12);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
 }
