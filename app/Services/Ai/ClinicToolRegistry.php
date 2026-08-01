@@ -137,7 +137,7 @@ class ClinicToolRegistry
             'strict' => true,
             'parameters' => [
                 'type' => 'object',
-                'properties' => $properties,
+                'properties' => $properties === [] ? (object) [] : $properties,
                 'required' => $required ?? array_keys($properties),
                 'additionalProperties' => false,
             ],
