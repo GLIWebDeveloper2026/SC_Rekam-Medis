@@ -11,7 +11,7 @@ class ReportController extends Controller
 {
     public function index(Request $request, ClinicReport $clinicReport, AuditTrail $auditTrail): View
     {
-        $start = $request->date('start_date')?->startOfDay() ?? now()->startOfMonth();
+        $start = $request->date('start_date')?->startOfDay() ?? now()->startOfDay();
         $end = ($request->date('end_date')?->addDay()->startOfDay()) ?? now()->addDay()->startOfDay();
         $report = $clinicReport->forPeriod($start, $end);
         $auditTrail->record('report.viewed', 'clinic_report', null, 'success', $request->user(), metadata: [

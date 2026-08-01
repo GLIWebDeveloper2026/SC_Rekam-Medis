@@ -7,7 +7,10 @@ use App\Models\PatientPortalAccount;
 use App\Models\ProviderSchedule;
 use App\Models\QueueTicket;
 use App\Queries\PatientVisitHistory;
+use App\Services\Appointments\AppointmentAvailability;
 use App\Services\AuditTrail;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -114,5 +117,40 @@ class PatientPortalController extends Controller
             'schedules',
             'visits',
         ));
+    }
+
+    public function slots(Request $request, AppointmentAvailability $availability): JsonResponse
+    {
+        $validated = $request->validate([
+            'provider_schedule_id' => ['required', 'uuid', 'exists:provider_schedules,id'],
+            'appointment_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+        ]);
+
+        $schedule = ProviderSchedule::query()->with('provider:id,name')->findOrFail($validated['provider_schedule_id']);
+        $date = CarbonImmutable::createFromFormat('Y-m-d', $validated['appointment_date'], config('clinic.timezone'));
+        $dayNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        $dayName = $dayNames[$date->isoWeekday()] ?? 'hari tersebut';
+
+        if (! $schedule->isAvailableOn($date)) {
+            return response()->json([
+                'is_available' => false,
+                'message' => "Dokter {$schedule->provider->name} tidak memiliki jadwal praktik pada hari {$dayName} ({$date->format('d-m-Y')}).",
+                'available_count' => 0,
+                'slots' => [],
+            ]);
+        }
+
+        $slots = $availability->availableSlots($schedule, $date);
+
+        return response()->json([
+            'is_available' => true,
+            'doctor_name' => $schedule->provider->name,
+            'service_type' => str($schedule->service_type)->headline()->toString(),
+            'day_name' => $dayName,
+            'date_formatted' => $date->format('d-m-Y'),
+            'available_count' => $slots->count(),
+            'slot_duration' => $schedule->slot_duration_minutes,
+            'slots' => $slots->values(),
+        ]);
     }
 }

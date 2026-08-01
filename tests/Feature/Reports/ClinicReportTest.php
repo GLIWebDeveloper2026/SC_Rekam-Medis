@@ -61,7 +61,7 @@ class ClinicReportTest extends TestCase
             ]);
         }
 
-        $report = app(ClinicReport::class)->forPeriod(now()->startOfMonth(), now()->addDay()->startOfDay());
+        $report = app(ClinicReport::class)->forPeriod(now()->startOfDay(), now()->addDay()->startOfDay());
 
         $this->assertSame(2, $report['visits']);
         $this->assertSame(3, $report['encounters']);

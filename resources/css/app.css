@@ -139,25 +139,25 @@
 
 @media (prefers-color-scheme: dark) {
     html {
-        color: #e8f0ed;
-        background: #10211e;
+        color: var(--color-ink);
+        background: var(--color-surface);
     }
 
     body {
         background-image:
-            radial-gradient(circle at 8% 0%, rgb(32 108 97 / 0.22), transparent 28rem),
-            radial-gradient(circle at 96% 12%, rgb(63 118 168 / 0.12), transparent 26rem);
+            radial-gradient(circle at 8% 0%, rgb(228 245 241 / 0.75), transparent 28rem),
+            radial-gradient(circle at 96% 12%, rgb(74 144 226 / 0.08), transparent 26rem);
     }
 
     .panel {
-        border-color: rgb(71 85 105 / 0.72);
-        background: rgb(20 37 33 / 0.96);
+        border-color: rgb(226 232 240 / 0.85);
+        background: rgb(255 255 255 / 0.94);
     }
 
     .form-input {
-        border-color: #425751;
-        background: #142521;
-        color: #eef5f2;
+        border-color: #d7dee3;
+        background: #ffffff;
+        color: var(--color-ink);
     }
 }
 

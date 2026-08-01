@@ -35,6 +35,10 @@ class AppointmentAvailability
             return false;
         }
 
+        if ($date->isToday() && $start->lt(now($timezone))) {
+            return false;
+        }
+
         $minutesFromOpening = (int) $hours['start']->diffInMinutes($start);
 
         if ($minutesFromOpening % $schedule->slot_duration_minutes !== 0) {

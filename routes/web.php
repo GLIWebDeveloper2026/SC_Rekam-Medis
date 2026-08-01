@@ -84,6 +84,8 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('patient.approved')->group(function (): void {
         Route::get('/patient-portal', [PatientPortalController::class, 'index'])
             ->name('patient-portal.index');
+        Route::get('/patient-portal/available-slots', [PatientPortalController::class, 'slots'])
+            ->name('patient-portal.slots');
         Route::post('/patient-portal/appointments', [PatientAppointmentController::class, 'store'])
             ->middleware('throttle:12,1')
             ->name('patient-portal.appointments.store');

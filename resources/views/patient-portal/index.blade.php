@@ -13,18 +13,56 @@
     @endif
 
     <section class="mt-8 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <article class="panel p-6">
+        <article class="panel p-6" x-data="{
+            scheduleId: '{{ old('provider_schedule_id') }}',
+            date: '{{ old('appointment_date', now(config('clinic.timezone'))->toDateString()) }}',
+            slotStart: '{{ old('slot_start') }}',
+            loading: false,
+            availableSlots: [],
+            availableCount: null,
+            statusMessage: '',
+            isAvailableDate: true,
+            async fetchSlots() {
+                if (!this.scheduleId || !this.date) {
+                    this.availableSlots = [];
+                    this.availableCount = null;
+                    this.statusMessage = '';
+                    return;
+                }
+                this.loading = true;
+                this.statusMessage = '';
+                try {
+                    const res = await fetch(`{{ route('patient-portal.slots') }}?provider_schedule_id=${this.scheduleId}&appointment_date=${this.date}`);
+                    const data = await res.json();
+                    this.isAvailableDate = data.is_available;
+                    this.availableCount = data.available_count;
+                    this.availableSlots = data.slots || [];
+                    if (!data.is_available) {
+                        this.statusMessage = data.message;
+                    } else if (data.available_count === 0) {
+                        this.statusMessage = 'Semua slot jam pada tanggal ini sudah penuh/berlalu.';
+                    } else {
+                        this.statusMessage = `Tersedia ${data.available_count} slot (kelipatan ${data.slot_duration || 30} menit) pada hari ${data.day_name}, ${data.date_formatted}.`;
+                    }
+                } catch (e) {
+                    this.statusMessage = 'Gagal memuat slot jadwal.';
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }" x-init="if (scheduleId && date) fetchSlots()">
             <h2 class="text-xl font-bold">Buat janji temu</h2>
             <p class="mt-2 text-sm leading-6 text-slate-500">Pilih jadwal aktif. Nomor antrean dibuat saat Anda check-in.</p>
             <form class="mt-6 grid gap-4" method="POST" action="{{ route('patient-portal.appointments.store') }}">
                 @csrf
                 <div>
                     <label class="mb-2 block text-sm font-bold" for="provider_schedule_id">Dokter dan layanan</label>
-                    <select class="form-input" id="provider_schedule_id" name="provider_schedule_id" required>
+                    <select class="form-input" id="provider_schedule_id" name="provider_schedule_id" x-model="scheduleId" @change="fetchSlots()" required>
                         <option value="">Pilih jadwal</option>
+                        @php($dayNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'])
                         @foreach ($schedules as $schedule)
                             <option value="{{ $schedule->id }}" @selected(old('provider_schedule_id') === $schedule->id)>
-                                {{ $schedule->provider->name }} - {{ str($schedule->service_type)->headline() }} - hari ke-{{ $schedule->day_of_week }} {{ substr($schedule->start_time, 0, 5) }}-{{ substr($schedule->end_time, 0, 5) }}
+                                {{ $schedule->provider->name }} - {{ str($schedule->service_type)->headline() }} ({{ $dayNames[$schedule->day_of_week] ?? 'Hari '.$schedule->day_of_week }}, {{ substr($schedule->start_time, 0, 5) }}-{{ substr($schedule->end_time, 0, 5) }} WIB)
                             </option>
                         @endforeach
                     </select>
@@ -33,15 +71,30 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-bold" for="appointment_date">Tanggal kunjungan</label>
-                        <input class="form-input" id="appointment_date" name="appointment_date" type="date" min="{{ now(config('clinic.timezone'))->addDay()->toDateString() }}" value="{{ old('appointment_date') }}" required>
+                        <input class="form-input" id="appointment_date" name="appointment_date" type="date" min="{{ now(config('clinic.timezone'))->toDateString() }}" x-model="date" @change="fetchSlots()" required>
                         @error('appointment_date')<p class="mt-2 text-sm font-semibold text-danger">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="mb-2 block text-sm font-bold" for="slot_start">Waktu mulai</label>
-                        <input class="form-input" id="slot_start" name="slot_start" type="time" step="1800" value="{{ old('slot_start') }}" required>
+                        <label class="mb-2 block text-sm font-bold" for="slot_start">Jam kunjungan (Kelipatan 30 Menit)</label>
+                        <template x-if="availableSlots.length > 0">
+                            <select class="form-input" id="slot_start" name="slot_start" x-model="slotStart" required>
+                                <option value="">-- Pilih Slot Jam --</option>
+                                <template x-for="slot in availableSlots" :key="slot.start">
+                                    <option :value="slot.start" x-text="slot.start + ' - ' + slot.end + ' WIB'"></option>
+                                </template>
+                            </select>
+                        </template>
+                        <template x-if="availableSlots.length === 0">
+                            <input class="form-input" id="slot_start" name="slot_start" type="time" step="1800" x-model="slotStart" placeholder="08:00" required>
+                        </template>
                         @error('slot_start')<p class="mt-2 text-sm font-semibold text-danger">{{ $message }}</p>@enderror
                     </div>
                 </div>
+
+                <div x-show="statusMessage" x-transition class="rounded-lg p-3 text-xs font-semibold" :class="isAvailableDate && availableCount > 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'">
+                    <span x-text="statusMessage"></span>
+                </div>
+
                 <div>
                     <label class="mb-2 block text-sm font-bold" for="payer_type">Jenis pembayaran</label>
                     <select class="form-input" id="payer_type" name="payer_type" required>
@@ -107,7 +160,7 @@
                                         <option value="{{ $schedule->id }}" @selected($schedule->id === $appointment->provider_schedule_id)>{{ $schedule->provider->name }} - {{ str($schedule->service_type)->headline() }}</option>
                                     @endforeach
                                 </select>
-                                <div class="grid gap-3 sm:grid-cols-2"><input class="form-input" name="appointment_date" type="date" min="{{ now(config('clinic.timezone'))->addDay()->toDateString() }}" required><input class="form-input" name="slot_start" type="time" step="1800" required></div>
+                                <div class="grid gap-3 sm:grid-cols-2"><input class="form-input" name="appointment_date" type="date" min="{{ now(config('clinic.timezone'))->toDateString() }}" value="{{ old('appointment_date', $appointment->appointment_date->toDateString()) }}" required><input class="form-input" name="slot_start" type="time" step="1800" value="{{ old('slot_start', $appointment->slot_start) }}" required></div>
                                 <button class="btn-primary" type="submit">Jadwalkan ulang</button>
                             </form>
                             <form class="mt-5 grid gap-3 border-t border-slate-100 pt-5" method="POST" action="{{ route('patient-portal.appointments.destroy', $appointment) }}">

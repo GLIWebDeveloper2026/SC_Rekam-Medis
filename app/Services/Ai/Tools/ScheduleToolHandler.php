@@ -55,15 +55,43 @@ class ScheduleToolHandler
             'provider_schedule_id' => ['required', 'uuid', 'exists:provider_schedules,id'],
             'appointment_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
         ])->validate();
-        $schedule = ProviderSchedule::query()->findOrFail($validated['provider_schedule_id']);
+        $schedule = ProviderSchedule::query()->with('provider:id,name')->findOrFail($validated['provider_schedule_id']);
         $date = CarbonImmutable::createFromFormat('Y-m-d', $validated['appointment_date'], config('clinic.timezone'));
-        $slots = $this->availability->availableSlots($schedule, $date)->take(20)->values()->all();
+        $dayNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        $dayName = $dayNames[$date->isoWeekday()] ?? 'hari tersebut';
+
+        if (! $schedule->isAvailableOn($date)) {
+            return new ToolResult(
+                false,
+                'doctor_not_practicing',
+                "Dokter {$schedule->provider->name} tidak memiliki jadwal praktik pada hari {$dayName} ({$date->format('d-m-Y')}).",
+                [
+                    'schedule_id' => $schedule->id,
+                    'doctor_name' => $schedule->provider->name,
+                    'day_name' => $dayName,
+                    'date' => $date->toDateString(),
+                    'available_count' => 0,
+                    'slots' => [],
+                ],
+            );
+        }
+
+        $allSlots = $this->availability->availableSlots($schedule, $date);
+        $slots = $allSlots->take(20)->values()->all();
 
         return new ToolResult(
             true,
             $slots === [] ? 'no_slots' : 'slots_found',
-            $slots === [] ? 'Tidak ada slot yang tersedia.' : 'Slot tersedia ditemukan.',
-            ['schedule_id' => $schedule->id, 'date' => $date->toDateString(), 'slots' => $slots],
+            $slots === [] ? "Semua slot pada hari {$dayName} ({$date->format('d-m-Y')}) sudah penuh atau berlalu." : "Ditemukan {$allSlots->count()} slot tersedia untuk Dokter {$schedule->provider->name} pada hari {$dayName} ({$date->format('d-m-Y')}) dengan interval 30 menit.",
+            [
+                'schedule_id' => $schedule->id,
+                'doctor_name' => $schedule->provider->name,
+                'day_name' => $dayName,
+                'date' => $date->toDateString(),
+                'available_count' => $allSlots->count(),
+                'slot_duration_minutes' => $schedule->slot_duration_minutes,
+                'slots' => $slots,
+            ],
         );
     }
 }

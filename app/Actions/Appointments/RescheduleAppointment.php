@@ -45,13 +45,19 @@ class RescheduleAppointment
                 throw ValidationException::withMessages(['appointment' => 'Janji temu hari ini atau yang sudah lewat tidak dapat diubah.']);
             }
 
+            if (! $lockedSchedule->isAvailableOn($targetDate)) {
+                $dayNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                $dayName = $dayNames[$targetDate->isoWeekday()] ?? 'hari tersebut';
+                throw ValidationException::withMessages(['appointment_date' => "Dokter/layanan tidak memiliki jadwal praktik pada hari {$dayName} ({$targetDate->format('d-m-Y')}). Pilih tanggal yang sesuai jadwal praktik."]);
+            }
+
             if (! $this->availability->isAvailable(
                 $lockedSchedule,
                 $targetDate,
                 $targetSlotStart,
                 $lockedAppointment->id,
             )) {
-                throw ValidationException::withMessages(['slot_start' => 'Slot jadwal tujuan tidak tersedia.']);
+                throw ValidationException::withMessages(['slot_start' => 'Slot waktu tujuan tidak tersedia.']);
             }
 
             $oldSlot = [

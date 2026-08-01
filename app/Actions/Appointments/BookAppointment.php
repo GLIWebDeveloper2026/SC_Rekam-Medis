@@ -38,8 +38,14 @@ class BookAppointment
         ): Appointment {
             $lockedSchedule = ProviderSchedule::query()->whereKey($schedule)->lockForUpdate()->firstOrFail();
 
+            if (! $lockedSchedule->isAvailableOn($date)) {
+                $dayNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                $dayName = $dayNames[$date->isoWeekday()] ?? 'hari tersebut';
+                throw ValidationException::withMessages(['appointment_date' => "Dokter/layanan tidak memiliki jadwal praktik pada hari {$dayName} ({$date->format('d-m-Y')}). Pilih tanggal yang sesuai jadwal praktik."]);
+            }
+
             if (! $this->availability->isAvailable($lockedSchedule, $date, $slotStart)) {
-                throw ValidationException::withMessages(['slot_start' => 'Slot jadwal tidak tersedia.']);
+                throw ValidationException::withMessages(['slot_start' => 'Slot waktu yang dipilih tidak tersedia (sudah penuh, di luar jam praktik, atau sudah berlalu).']);
             }
 
             $timezone = config('clinic.timezone');
