@@ -6,6 +6,7 @@
 .phpactor.json
 .phpunit.result.cache
 /.codex
+/.playwright-mcp
 /.cursor/
 /.idea
 /.nova
@@ -20,6 +21,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/mariadb-data
 /vendor
 _ide_helper.php
 Homestead.json

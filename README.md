@@ -7,6 +7,21 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Klinik Pratama Sehat Bersama
+
+Sistem operasional klinik berbasis Laravel 13, Blade, Tailwind CSS 4, Alpine.js, dan database produksi MariaDB 10.11. Seluruh waktu klinik menggunakan WIB (`Asia/Jakarta`).
+
+Setup pengembangan utama:
+
+```bash
+composer install
+npm install
+php artisan migrate --seed
+npm run build
+```
+
+Panduan deployment database tersedia di `docs/operations/database.md`. Jadwal backup terenkripsi, retensi, restore drill, dan point-in-time recovery tersedia di `docs/operations/backup-and-restore.md`.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
