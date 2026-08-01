@@ -45,7 +45,7 @@
                         <div>
                             <div class="mb-2 flex items-center justify-between gap-4">
                                 <label class="text-sm font-bold text-slate-700" for="password">Kata sandi</label>
-                                <span class="text-xs font-semibold text-slate-400">Minimal 8 karakter</span>
+                                <a class="text-xs font-bold text-clinic-700 hover:text-clinic-800" href="{{ route('password.request') }}">Lupa kata sandi?</a>
                             </div>
                             <input class="form-input" id="password" name="password" type="password" autocomplete="current-password" required>
                             @error('password')
@@ -60,7 +60,8 @@
                     </form>
                 </div>
 
-                <p class="mt-6 text-center text-sm text-slate-500">Akun terkunci atau lupa sandi? Hubungi administrator klinik.</p>
+                <p class="mt-6 text-center text-sm text-slate-500">Akun terkunci? Hubungi administrator klinik.</p>
+                <p class="mt-3 text-center text-sm text-slate-500">Belum memiliki akun? <a class="font-bold text-clinic-700 hover:text-clinic-800" href="{{ route('register') }}">Daftar sekarang</a></p>
             </div>
         </section>
     </main>

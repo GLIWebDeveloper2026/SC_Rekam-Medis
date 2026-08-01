@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Controllers\AccountSecurityController;
 use App\Http\Controllers\AllergyEntryController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClinicalDraftController;
 use App\Http\Controllers\ClinicalEntryController;
 use App\Http\Controllers\ClinicalWorkspaceController;
@@ -25,13 +25,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::middleware('guest')->group(function (): void {
-    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
-});
-
 Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/account/security', AccountSecurityController::class)
+        ->middleware('password.confirm')
+        ->name('account.security');
     Route::get('/clinical-workspace', ClinicalWorkspaceController::class)
         ->middleware('permission:clinical.view')
         ->name('clinical.workspace');
@@ -64,5 +62,4 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/medical-record-copy-requests/{medicalRecordCopyRequest}/approve', [MedicalRecordCopyController::class, 'approve'])->middleware('permission:record-copies.approve')->name('record-copies.approve');
     Route::post('/medical-record-copy-requests/{medicalRecordCopyRequest}/generate', [MedicalRecordCopyController::class, 'generate'])->middleware('permission:record-copies.manage')->name('record-copies.generate');
     Route::get('/reports', [ReportController::class, 'index'])->middleware('permission:reports.view')->name('reports.index');
-    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });

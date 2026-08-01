@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable([
     'name',
@@ -23,11 +25,16 @@ use Illuminate\Notifications\Notifiable;
     'last_login_at',
     'disabled_at',
 ])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+#[Hidden([
+    'password',
+    'remember_token',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+])]
+class User extends Authenticatable implements MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasUuids, Notifiable;
+    use HasFactory, HasUuids, MustVerifyEmail, Notifiable, TwoFactorAuthenticatable;
 
     public function isActive(): bool
     {
@@ -80,6 +87,7 @@ class User extends Authenticatable
             'locked_until' => 'datetime',
             'last_login_at' => 'datetime',
             'disabled_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 }
